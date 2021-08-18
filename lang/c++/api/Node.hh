@@ -172,6 +172,10 @@ class AVRO_DECL Node : protected std::enable_shared_from_this<Node>,
     virtual void printDefaultToJson(const GenericDatum& g, std::ostream &os,
                                     int depth) const = 0;
 
+    virtual NodePtr getNode() const {
+        return const_cast<Node *>(this)->shared_from_this();
+    };
+
   protected:
 
     void checkLock() const {

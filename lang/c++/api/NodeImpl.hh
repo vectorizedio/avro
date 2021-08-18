@@ -167,7 +167,7 @@ class NodeImpl : public Node
         if (reader.type() == AVRO_SYMBOLIC) {
 
             // resolve the symbolic type, and check again
-            const NodePtr &node = reader.leafAt(0);
+            const NodePtr &node = reader.getNode();
             match = resolve(*node);
         }
         else if(reader.type() == AVRO_UNION) {
