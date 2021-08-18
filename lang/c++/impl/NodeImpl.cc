@@ -209,7 +209,7 @@ NodeFixed::resolve(const Node &reader) const {
 
 SchemaResolution
 NodeSymbolic::resolve(const Node &reader) const {
-    const NodePtr &node = leafAt(0);
+    const NodePtr &node = getNode();
     return node->resolve(reader);
 }
 

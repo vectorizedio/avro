@@ -183,6 +183,10 @@ public:
     virtual void printDefaultToJson(const GenericDatum &g, std::ostream &os,
                                     size_t depth) const = 0;
 
+    virtual NodePtr getNode() const {
+        return const_cast<Node *>(this)->shared_from_this();
+    };
+
 protected:
     void checkLock() const {
         if (locked()) {
