@@ -381,13 +381,35 @@ static NodePtr makeEnumNode(const Entity &e,
     string symbolsName = "symbols";
     const Array &v = getArrayField(e, m, symbolsName);
     concepts::MultiAttribute<string> symbols;
+    GenericDatum defaultValue;
     for (const auto &it : v) {
         if (it.type() != json::EntityType::String) {
             throw Exception("Enum symbol not a string: {}", it.toString());
         }
         symbols.add(it.stringValue());
     }
-    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols, GenericDatum());
+ 
+    auto it = m.find("default");
+    if (it != m.end()) {
+        const json::Entity &e = it->second;
+        if (it->second.type() != json::EntityType::String) {
+            throw Exception("Enum default not a string: {}", e.toString());
+        }
+        string defStr = e.stringValue();
+        bool symbolsHasDefault = false;
+        for (size_t i = 0; i < symbols.size(); ++i) {
+            if (symbols.get(i) == defStr) {
+                symbolsHasDefault = true;
+                break;
+            }
+        }
+        if (!symbolsHasDefault) {
+            throw Exception("Enum default not in symbols: {}", defStr);
+        }
+        defaultValue = defStr;
+    }
+
+    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols, defaultValue);
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
