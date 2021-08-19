@@ -128,6 +128,16 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_DOUBLE;
             }
 
+        break;
+
+        case AVRO_BYTES:
+
+            return reader.type() == AVRO_STRING ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+
+        case AVRO_STRING:
+
+            return reader.type() == AVRO_BYTES ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+
         default: break;
     }
 
