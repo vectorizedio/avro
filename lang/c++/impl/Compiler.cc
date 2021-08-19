@@ -366,16 +366,38 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
 }
 
 static NodePtr makeEnumNode(const Entity &e,
-                            const Name &name, const Object &m) {
+                            const Name &name, const Object &m, const SymbolTable &st) {
     const Array &v = getArrayField(e, m, "symbols");
     concepts::MultiAttribute<string> symbols;
+    GenericDatum defaultValue;
     for (const auto &it : v) {
         if (it.type() != json::EntityType::String) {
             throw Exception(boost::format("Enum symbol not a string: %1%") % it.toString());
         }
         symbols.add(it.stringValue());
     }
-    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols, GenericDatum());
+ 
+    auto it = m.find("default");
+    if (it != m.end()) {
+        const json::Entity &e = it->second;
+        if (it->second.type() != json::EntityType::String) {
+            throw Exception(boost::format("Enum default not a string: %1%") % e.toString());
+        }
+        string defStr = e.stringValue();
+        bool symbolsHasDefault = false;
+        for (size_t i = 0; i < symbols.size(); ++i) {
+            if (symbols.get(i) == defStr) {
+                symbolsHasDefault = true;
+                break;
+            }
+        }
+        if (!symbolsHasDefault) {
+            throw Exception(boost::format("Enum default not in symbols: %1%") % defStr);
+        }
+        defaultValue = defStr;
+    }
+
+    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols, defaultValue);
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -461,7 +483,7 @@ static NodePtr makeNode(const Entity &e, const Object &m,
                     ->swap(*std::dynamic_pointer_cast<NodeRecord>(result));
             }
         } else {
-            result = (type == "enum") ? makeEnumNode(e, nm, m) : makeFixedNode(e, nm, m);
+            result = (type == "enum") ? makeEnumNode(e, nm, m, st) : makeFixedNode(e, nm, m);
             st[nm] = result;
         }
     } else if (type == "array") {
