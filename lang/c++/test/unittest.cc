@@ -925,6 +925,8 @@ struct TestResolution {
                        bool_(BoolSchema()),
                        float_(FloatSchema()),
                        double_(DoubleSchema()),
+                       string_(StringSchema()),
+                       bytes_(BytesSchema()),
 
                        mapOfInt_(MapSchema(IntSchema())),
                        mapOfDouble_(MapSchema(DoubleSchema())),
@@ -1008,6 +1010,10 @@ struct TestResolution {
         BOOST_CHECK_EQUAL(resolve(unionOne_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE);
         BOOST_CHECK_EQUAL(resolve(unionTwo_, float_), RESOLVE_PROMOTABLE_TO_FLOAT);
         BOOST_CHECK_EQUAL(resolve(unionOne_, unionTwo_), RESOLVE_MATCH);
+
+
+        BOOST_CHECK_EQUAL(resolve(string_, bytes_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(bytes_, string_), RESOLVE_MATCH);
     }
 
 private:
@@ -1016,6 +1022,8 @@ private:
     ValidSchema bool_;
     ValidSchema float_;
     ValidSchema double_;
+    ValidSchema string_;
+    ValidSchema bytes_;
 
     ValidSchema mapOfInt_;
     ValidSchema mapOfDouble_;
