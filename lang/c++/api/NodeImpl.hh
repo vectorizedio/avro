@@ -357,20 +357,29 @@ public:
 
 class AVRO_DECL NodeEnum : public NodeImplEnum
 {
+    GenericDatum defaultValue;
+
   public:
 
     NodeEnum() :
         NodeImplEnum(AVRO_ENUM)
     { }
 
-    NodeEnum(const HasName &name, const LeafNames &symbols) :
-        NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize())
+    NodeEnum(const HasName &name, const LeafNames &symbols, GenericDatum dv) :
+        NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize()),
+        defaultValue(std::move(dv))
     {
         for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
             if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                  throw Exception(boost::format("Cannot add duplicate enum: %1%") % leafNameAttributes_.get(i));
             }
         }
+    }
+
+    void swap(NodeEnum &r) {
+        NodeImplEnum::swap(r);
+        using std::swap;
+        swap(defaultValue, r.defaultValue);
     }
 
     SchemaResolution resolve(const Node &reader)  const;
@@ -382,6 +391,13 @@ class AVRO_DECL NodeEnum : public NodeImplEnum
                 (nameAttribute_.size() == 1) &&
                 (leafNameAttributes_.size() > 0)
                );
+    }
+
+    const GenericDatum &defaultValueAt(int index) const {
+        if (index != 0) {
+            throw Exception("Enum has only 1 default");
+        }
+        return defaultValue;
     }
 
     void printDefaultToJson(const GenericDatum& g, std::ostream &os, int depth) const;
