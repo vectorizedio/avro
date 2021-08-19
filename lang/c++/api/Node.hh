@@ -138,7 +138,7 @@ class AVRO_DECL Node : protected std::enable_shared_from_this<Node>,
     }
     virtual size_t leaves() const = 0;
     virtual const NodePtr& leafAt(int index) const = 0;
-    virtual const GenericDatum& defaultValueAt(int index) {
+    virtual const GenericDatum& defaultValueAt(int index) const {
         throw Exception(boost::format("No default value at: %1%") % index);
     }
 

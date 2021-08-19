@@ -348,7 +348,7 @@ public:
             (leafAttributes_.size() == leafNameAttributes_.size()));
     }
 
-    const GenericDatum& defaultValueAt(int index) {
+    const GenericDatum& defaultValueAt(int index) const {
         return defaultValues[index];
     }
 
