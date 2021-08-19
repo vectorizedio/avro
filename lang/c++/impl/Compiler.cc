@@ -375,7 +375,7 @@ static NodePtr makeEnumNode(const Entity &e,
         }
         symbols.add(it.stringValue());
     }
-    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols);
+    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols, GenericDatum());
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
