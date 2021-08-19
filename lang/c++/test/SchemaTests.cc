@@ -64,6 +64,7 @@ const char* basicSchemas[] = {
         "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
     "{\"type\":\"enum\",\"doc\":\"enum_doc\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
+    "{\"type\":\"enum\",\"doc\":\"enum_doc\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\",\"C\"],\"default\":\"C\"}",
 
     // Array
     "{\"type\":\"array\",\"doc\":\"array_doc\",\"items\":\"long\"}",
@@ -132,6 +133,12 @@ const char* basicSchemaErrors[] = {
     // Duplicate symbol
     "{\"type\": \"enum\", \"name\": \"Test\","
         "\"symbols\" : [\"AA\", \"AA\"]}",
+    // Default not a string
+    "{\"type\": \"enum\", \"name\": \"Test\","
+        "\"symbols\" : [\"AA\", \"BB\"],\"default\":42}",
+    // Default not in symbols
+    "{\"type\": \"enum\", \"name\": \"Test\","
+        "\"symbols\" : [\"AA\", \"BB\"],\"default\":\"CC\"}",
 
     // Union
     // Duplicate type
