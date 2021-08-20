@@ -96,7 +96,8 @@ inline std::ostream &operator<<(std::ostream &os, const Name &n) {
 /// different node types.
 ///
 
-class AVRO_DECL Node : private boost::noncopyable {
+class AVRO_DECL Node : public std::enable_shared_from_this<Node>,
+                       private boost::noncopyable {
 public:
     explicit Node(Type type) : type_(type),
                                logicalType_(LogicalType::NONE),

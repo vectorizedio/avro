@@ -571,7 +571,7 @@ void NodeMap::printJson(std::ostream &os, size_t depth) const {
 }
 
 NodeMap::NodeMap() : NodeImplMap(AVRO_MAP) {
-    NodePtr key(new NodePrimitive(AVRO_STRING));
+    NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
     doAddLeaf(key);
 }
 

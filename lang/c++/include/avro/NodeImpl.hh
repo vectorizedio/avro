@@ -382,7 +382,7 @@ public:
 
     explicit NodeMap(const SingleLeaf &values) : NodeImplMap(AVRO_MAP, NoName(), MultiLeaves(values), NoLeafNames(), NoAttributes(), NoSize()) {
         // need to add the key for the map too
-        NodePtr key(new NodePrimitive(AVRO_STRING));
+        NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
         doAddLeaf(key);
 
         // key goes before value
@@ -499,10 +499,8 @@ NodeImpl<A, B, C, D, E>::setLeafToSymbolic(size_t index, const NodePtr &node) {
         throw Exception("Symbolic name does not match the name of the schema it references");
     }
 
-    auto symbol = std::make_shared<NodeSymbolic>();
-    symbol->setName(node->name());
-    symbol->setNode(node);
-    replaceNode = symbol;
+    NodePtr symbol = std::make_shared<NodeSymbolic>(HasName(node->name()), node);
+    replaceNode.swap(symbol);
 }
 
 template<class A, class B, class C, class D, class E>
