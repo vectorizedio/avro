@@ -59,42 +59,42 @@ protected:
 
 class AVRO_DECL NullSchema : public Schema {
 public:
-    NullSchema() : Schema(new NodePrimitive(AVRO_NULL)) {}
+    NullSchema() : Schema(std::make_shared<NodePrimitive>(AVRO_NULL)) {}
 };
 
 class AVRO_DECL BoolSchema : public Schema {
 public:
-    BoolSchema() : Schema(new NodePrimitive(AVRO_BOOL)) {}
+    BoolSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_BOOL)) {}
 };
 
 class AVRO_DECL IntSchema : public Schema {
 public:
-    IntSchema() : Schema(new NodePrimitive(AVRO_INT)) {}
+    IntSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_INT)) {}
 };
 
 class AVRO_DECL LongSchema : public Schema {
 public:
-    LongSchema() : Schema(new NodePrimitive(AVRO_LONG)) {}
+    LongSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_LONG)) {}
 };
 
 class AVRO_DECL FloatSchema : public Schema {
 public:
-    FloatSchema() : Schema(new NodePrimitive(AVRO_FLOAT)) {}
+    FloatSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_FLOAT)) {}
 };
 
 class AVRO_DECL DoubleSchema : public Schema {
 public:
-    DoubleSchema() : Schema(new NodePrimitive(AVRO_DOUBLE)) {}
+    DoubleSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_DOUBLE)) {}
 };
 
 class AVRO_DECL StringSchema : public Schema {
 public:
-    StringSchema() : Schema(new NodePrimitive(AVRO_STRING)) {}
+    StringSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_STRING)) {}
 };
 
 class AVRO_DECL BytesSchema : public Schema {
 public:
-    BytesSchema() : Schema(new NodePrimitive(AVRO_BYTES)) {}
+    BytesSchema(): Schema(std::make_shared<NodePrimitive>(AVRO_BYTES)) {}
 };
 
 class AVRO_DECL RecordSchema : public Schema {
