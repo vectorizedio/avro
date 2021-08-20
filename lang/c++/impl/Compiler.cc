@@ -46,21 +46,21 @@ typedef map<Name, NodePtr> SymbolTable;
 static NodePtr makePrimitive(const string& t)
 {
     if (t == "null") {
-        return NodePtr(new NodePrimitive(AVRO_NULL));
+        return std::make_shared<NodePrimitive>(AVRO_NULL);
     } else if (t == "boolean") {
-        return NodePtr(new NodePrimitive(AVRO_BOOL));
+        return std::make_shared<NodePrimitive>(AVRO_BOOL);
     } else if (t == "int") {
-        return NodePtr(new NodePrimitive(AVRO_INT));
+        return std::make_shared<NodePrimitive>(AVRO_INT);
     } else if (t == "long") {
-        return NodePtr(new NodePrimitive(AVRO_LONG));
+        return std::make_shared<NodePrimitive>(AVRO_LONG);
     } else if (t == "float") {
-        return NodePtr(new NodePrimitive(AVRO_FLOAT));
+        return std::make_shared<NodePrimitive>(AVRO_FLOAT);
     } else if (t == "double") {
-        return NodePtr(new NodePrimitive(AVRO_DOUBLE));
+        return std::make_shared<NodePrimitive>(AVRO_DOUBLE);
     } else if (t == "string") {
-        return NodePtr(new NodePrimitive(AVRO_STRING));
+        return std::make_shared<NodePrimitive>(AVRO_STRING);
     } else if (t == "bytes") {
-        return NodePtr(new NodePrimitive(AVRO_BYTES));
+        return std::make_shared<NodePrimitive>(AVRO_BYTES);
     } else {
         return NodePtr();
     }
@@ -96,7 +96,7 @@ static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns)
 
     SymbolTable::const_iterator it = st.find(n);
     if (it != st.end()) {
-        return NodePtr(new NodeSymbolic(asSingleAttribute(n), it->second));
+        return std::make_shared<NodeSymbolic>(asSingleAttribute(n), it->second);
     }
     throw Exception(boost::format("Unknown type: %1%") % n.fullname());
 }
@@ -322,15 +322,18 @@ static NodePtr makeRecordNode(const Entity& e, const Name& name,
         fieldValues.add(f.schema);
         defaultValues.push_back(f.defaultValue);
     }
-    NodeRecord* node;
+    NodePtr node;
     if (doc == NULL) {
-        node = new NodeRecord(asSingleAttribute(name), fieldValues, fieldNames,
-                              defaultValues);
+        node = std::make_shared<NodeRecord>(asSingleAttribute(name),
+                                            fieldValues, fieldNames,
+                                            defaultValues);
     } else {
-        node = new NodeRecord(asSingleAttribute(name), asSingleAttribute(*doc),
-                              fieldValues, fieldNames, defaultValues);
+        node = std::make_shared<NodeRecord>(asSingleAttribute(name),
+                                            asSingleAttribute(*doc),
+                                            fieldValues, fieldNames,
+                                            defaultValues);
     }
-    return NodePtr(node);
+    return node;
 }
 
 static LogicalType makeLogicalType(const Entity& e, const Object& m) {
@@ -385,7 +388,7 @@ static NodePtr makeEnumNode(const Entity& e,
         }
         symbols.add(it->stringValue());
     }
-    NodePtr node = NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
+    NodePtr node = std::make_shared<NodeEnum>(asSingleAttribute(name), symbols);
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -401,7 +404,7 @@ static NodePtr makeFixedNode(const Entity& e,
             e.toString());
     }
     NodePtr node =
-        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(v)));
+        std::make_shared<NodeFixed>(asSingleAttribute(name), asSingleAttribute(v));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -412,8 +415,8 @@ static NodePtr makeArrayNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
     Object::const_iterator it = findField(e, m, "items");
-    NodePtr node = NodePtr(new NodeArray(
-        asSingleAttribute(makeNode(it->second, st, ns))));
+    NodePtr node = std::make_shared<NodeArray>(
+        asSingleAttribute(makeNode(it->second, st, ns)));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -425,8 +428,8 @@ static NodePtr makeMapNode(const Entity& e, const Object& m,
 {
     Object::const_iterator it = findField(e, m, "values");
 
-    NodePtr node = NodePtr(new NodeMap(
-        asSingleAttribute(makeNode(it->second, st, ns))));
+    NodePtr node = std::make_shared<NodeMap>(
+        asSingleAttribute(makeNode(it->second, st, ns)));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -464,7 +467,7 @@ static NodePtr makeNode(const Entity& e, const Object& m,
         type == "enum" || type == "fixed") {
         Name nm = getName(e, m, ns);
         if (type == "record" || type == "error") {
-            result = NodePtr(new NodeRecord());
+            result = std::make_shared<NodeRecord>();
             st[nm] = result;
             // Get field doc
             if (containsField(m, "doc")) {
@@ -513,7 +516,7 @@ static NodePtr makeNode(const Entity& e, const Array& m,
     for (Array::const_iterator it = m.begin(); it != m.end(); ++it) {
         mm.add(makeNode(*it, st, ns));
     }
-    return NodePtr(new NodeUnion(mm));
+    return std::make_shared<NodeUnion>(mm);
 }
 
 static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns)

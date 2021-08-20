@@ -417,7 +417,7 @@ class AVRO_DECL NodeMap : public NodeImplMap
     NodeMap() :
         NodeImplMap(AVRO_MAP)
     {
-         NodePtr key(new NodePrimitive(AVRO_STRING));
+         NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
          doAddLeaf(key);
     }
 
@@ -425,7 +425,7 @@ class AVRO_DECL NodeMap : public NodeImplMap
         NodeImplMap(AVRO_MAP, NoName(), values, NoLeafNames(), NoSize())
     {
         // need to add the key for the map too
-        NodePtr key(new NodePrimitive(AVRO_STRING));
+        NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
         doAddLeaf(key);
 
         // key goes before value
@@ -558,11 +558,7 @@ NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
         throw Exception("Symbolic name does not match the name of the schema it references");
     }
 
-    NodePtr symbol(new NodeSymbolic);
-    NodeSymbolic *ptr = static_cast<NodeSymbolic *> (symbol.get());
-
-    ptr->setName(node->name());
-    ptr->setNode(node);
+    NodePtr symbol(std::make_shared<NodeSymbolic>(node->name(), node));
     replaceNode.swap(symbol);
 }
 

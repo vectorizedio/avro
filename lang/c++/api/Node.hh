@@ -86,7 +86,8 @@ std::ostream& operator << (std::ostream& os, const Name& n) {
 /// different node types.
 ///
 
-class AVRO_DECL Node : private boost::noncopyable
+class AVRO_DECL Node : protected std::enable_shared_from_this<Node>,
+                       private boost::noncopyable
 {
   public:
 
