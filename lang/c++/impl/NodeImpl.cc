@@ -482,7 +482,15 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
         os << indent(depth) << '\"' << leafNameAttributes_.get(i) << '\"';
     }
     os << '\n';
-    os << indent(--depth) << "]\n";
+    os << indent(--depth) << "]";
+
+    if (defaultValue.type() != AVRO_NULL) {
+        os << ",\n"
+           << indent(depth) << "\"default\": ";
+        NodePrimitive{defaultValue.type()}.printDefaultToJson(defaultValue, os, depth);
+    }
+
+    os << "\n";
     os << indent(--depth) << '}';
 }
 
