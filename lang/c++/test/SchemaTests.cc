@@ -192,7 +192,7 @@ const char *roundTripSchemas[] = {
     "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
     "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
-    R"({"type":"enum","name":"Test","symbols":["A","B"]})",
+    R"({"type":"enum","name":"Test","symbols":["A","B","C"],"default":"C"})",
 
     // Array
     R"({"type":"array","items":"long"})",
