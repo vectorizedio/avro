@@ -188,6 +188,7 @@ const char* roundTripSchemas[] = {
         "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
     "{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
+    "{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\",\"C\"],\"default\":\"C\"}",
 
     // Array
     "{\"type\":\"array\",\"items\":\"long\"}",
