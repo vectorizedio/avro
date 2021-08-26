@@ -167,7 +167,7 @@ class NodeImpl : public Node
         if (reader.type() == AVRO_SYMBOLIC) {
 
             // resolve the symbolic type, and check again
-            const NodePtr &node = reader.leafAt(0);
+            const NodePtr &node = reader.getNode();
             match = resolve(*node);
         }
         else if(reader.type() == AVRO_UNION) {
@@ -348,7 +348,7 @@ public:
             (leafAttributes_.size() == leafNameAttributes_.size()));
     }
 
-    const GenericDatum& defaultValueAt(int index) {
+    const GenericDatum& defaultValueAt(int index) const {
         return defaultValues[index];
     }
 
@@ -357,20 +357,29 @@ public:
 
 class AVRO_DECL NodeEnum : public NodeImplEnum
 {
+    GenericDatum defaultValue;
+
   public:
 
     NodeEnum() :
         NodeImplEnum(AVRO_ENUM)
     { }
 
-    NodeEnum(const HasName &name, const LeafNames &symbols) :
-        NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize())
+    NodeEnum(const HasName &name, const LeafNames &symbols, GenericDatum dv) :
+        NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize()),
+        defaultValue(std::move(dv))
     {
         for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
             if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                  throw Exception(boost::format("Cannot add duplicate enum: %1%") % leafNameAttributes_.get(i));
             }
         }
+    }
+
+    void swap(NodeEnum &r) {
+        NodeImplEnum::swap(r);
+        using std::swap;
+        swap(defaultValue, r.defaultValue);
     }
 
     SchemaResolution resolve(const Node &reader)  const;
@@ -382,6 +391,13 @@ class AVRO_DECL NodeEnum : public NodeImplEnum
                 (nameAttribute_.size() == 1) &&
                 (leafNameAttributes_.size() > 0)
                );
+    }
+
+    const GenericDatum &defaultValueAt(int index) const {
+        if (index != 0) {
+            throw Exception("Enum has only 1 default");
+        }
+        return defaultValue;
     }
 
     void printDefaultToJson(const GenericDatum& g, std::ostream &os, int depth) const;
@@ -417,7 +433,7 @@ class AVRO_DECL NodeMap : public NodeImplMap
     NodeMap() :
         NodeImplMap(AVRO_MAP)
     {
-         NodePtr key(new NodePrimitive(AVRO_STRING));
+         NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
          doAddLeaf(key);
     }
 
@@ -425,7 +441,7 @@ class AVRO_DECL NodeMap : public NodeImplMap
         NodeImplMap(AVRO_MAP, NoName(), values, NoLeafNames(), NoSize())
     {
         // need to add the key for the map too
-        NodePtr key(new NodePrimitive(AVRO_STRING));
+        NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
         doAddLeaf(key);
 
         // key goes before value
@@ -558,11 +574,7 @@ NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
         throw Exception("Symbolic name does not match the name of the schema it references");
     }
 
-    NodePtr symbol(new NodeSymbolic);
-    NodeSymbolic *ptr = static_cast<NodeSymbolic *> (symbol.get());
-
-    ptr->setName(node->name());
-    ptr->setNode(node);
+    NodePtr symbol(std::make_shared<NodeSymbolic>(node->name(), node));
     replaceNode.swap(symbol);
 }
 

@@ -36,7 +36,7 @@ Schema::Schema(Node *node) :
 { }
 
 RecordSchema::RecordSchema(const std::string &name) :
-    Schema(new NodeRecord)
+    Schema(std::make_shared<NodeRecord>())
 {
     node_->setName(name);
 }
@@ -61,7 +61,7 @@ void RecordSchema::setDoc(const std::string& doc)
 }
 
 EnumSchema::EnumSchema(const std::string &name) :
-    Schema(new NodeEnum)
+    Schema(std::make_shared<NodeEnum>())
 {
     node_->setName(name);
 }
@@ -73,31 +73,31 @@ EnumSchema::addSymbol(const std::string &symbol)
 }
 
 ArraySchema::ArraySchema(const Schema &itemsSchema) :
-    Schema(new NodeArray)
+    Schema(std::make_shared<NodeArray>())
 {
     node_->addLeaf(itemsSchema.root());
 }
 
 ArraySchema::ArraySchema(const ArraySchema &itemsSchema) :
-    Schema(new NodeArray)
+    Schema(std::make_shared<NodeArray>())
 {
     node_->addLeaf(itemsSchema.root());
 }
 
 MapSchema::MapSchema(const Schema &valuesSchema) :
-    Schema(new NodeMap)
+    Schema(std::make_shared<NodeMap>())
 {
     node_->addLeaf(valuesSchema.root());
 }
 
 MapSchema::MapSchema(const MapSchema &valuesSchema) :
-    Schema(new NodeMap)
+    Schema(std::make_shared<NodeMap>())
 {
     node_->addLeaf(valuesSchema.root());
 }
 
 UnionSchema::UnionSchema() :
-    Schema(new NodeUnion)
+    Schema(std::make_shared<NodeUnion>())
 { }
 
 void
@@ -123,14 +123,14 @@ UnionSchema::addType(const Schema &typeSchema)
 }
 
 FixedSchema::FixedSchema(int size, const std::string &name) :
-    Schema(new NodeFixed)
+    Schema(std::make_shared<NodeFixed>())
 {
     node_->setFixedSize(size);
     node_->setName(name);
 }
 
 SymbolicSchema::SymbolicSchema(const Name &name, const NodePtr& link) :
-    Schema(new NodeSymbolic(HasName(name), link))
+    Schema(std::make_shared<NodeSymbolic>(HasName(name), link))
 {
 }
 

@@ -125,6 +125,16 @@ NodePrimitive::resolve(const Node &reader) const
             return RESOLVE_PROMOTABLE_TO_DOUBLE;
         }
 
+        break;
+
+      case AVRO_BYTES:
+
+        return reader.type() == AVRO_STRING ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+
+      case AVRO_STRING:
+
+        return reader.type() == AVRO_BYTES ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+
       default:
         break;
     }
@@ -214,7 +224,7 @@ NodeFixed::resolve(const Node &reader) const
 SchemaResolution
 NodeSymbolic::resolve(const Node &reader) const
 {
-    const NodePtr &node = leafAt(0);
+    const NodePtr &node = getNode();
     return node->resolve(reader);
 }
 
@@ -473,7 +483,15 @@ NodeEnum::printJson(std::ostream &os, int depth) const
         os << indent(depth) << '\"' << leafNameAttributes_.get(i) << '\"';
     }
     os << '\n';
-    os << indent(--depth) << "]\n";
+    os << indent(--depth) << "]";
+
+    if (defaultValue.type() != AVRO_NULL) {
+        os << ",\n"
+           << indent(depth) << "\"default\": ";
+        NodePrimitive{defaultValue.type()}.printDefaultToJson(defaultValue, os, depth);
+    }
+
+    os << "\n";
     os << indent(--depth) << '}';
 }
 
