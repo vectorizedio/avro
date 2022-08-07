@@ -37,7 +37,7 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-    <hadoop.version>3.3.1</hadoop.version>
+    <hadoop.version>3.3.4</hadoop.version>
     <jackson.version>2.12.4</jackson.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.43.v20210629</jetty.version>
