@@ -136,7 +136,7 @@ public:
     }
     virtual size_t leaves() const = 0;
     virtual const NodePtr &leafAt(size_t index) const = 0;
-    virtual const GenericDatum &defaultValueAt(size_t index) {
+    virtual const GenericDatum &defaultValueAt(size_t index) const {
         throw Exception(boost::format("No default value at: %1%") % index);
     }
 

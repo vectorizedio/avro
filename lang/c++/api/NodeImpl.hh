@@ -343,7 +343,7 @@ public:
             customAttributes_.size() == leafAttributes_.size()));
     }
 
-    const GenericDatum &defaultValueAt(size_t index) override {
+    const GenericDatum &defaultValueAt(size_t index) const override {
         return defaultValues[index];
     }
 
