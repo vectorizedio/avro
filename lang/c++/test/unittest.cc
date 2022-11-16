@@ -457,12 +457,12 @@ struct TestSchema {
         std::string expectedJsonWithCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\", "
-            "\"arrayField\": \"[1]\", "
-            "\"booleanField\": \"true\", "
-            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-            "\"nullField\": \"null\", "
-            "\"numberField\": \"1.23\", "
-            "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+            "\"arrayField\": [1], "
+            "\"booleanField\": true, "
+            "\"mapField\": {\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}, "
+            "\"nullField\": null, "
+            "\"numberField\": 1.23, "
+            "\"stringField\": \\\"field value with \\\"double quotes\\\"\\\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                        expectedJsonWithCustomAttribute);
