@@ -133,11 +133,19 @@ NodePrimitive::resolve(const Node &reader) const {
 
         case AVRO_BYTES:
 
-            return reader.type() == AVRO_STRING ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+            if (reader.type() == AVRO_STRING) {
+                return RESOLVE_MATCH;
+            }
+
+            break;
 
         case AVRO_STRING:
 
-            return reader.type() == AVRO_BYTES ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
+            if (reader.type() == AVRO_BYTES) {
+                return RESOLVE_MATCH;
+            }
+
+            break;
 
         default: break;
     }
