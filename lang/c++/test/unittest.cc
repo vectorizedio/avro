@@ -956,6 +956,11 @@ struct TestResolution {
             two.addType(IntSchema());
             two.addType(DoubleSchema());
             unionTwo_.setSchema(two);
+
+            UnionSchema three;
+            three.addType(NullSchema());
+            three.addType(StringSchema());
+            unionThree_.setSchema(three);
         }
     }
 
@@ -1013,6 +1018,7 @@ struct TestResolution {
         BOOST_CHECK_EQUAL(resolve(unionOne_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE);
         BOOST_CHECK_EQUAL(resolve(unionTwo_, float_), RESOLVE_PROMOTABLE_TO_FLOAT);
         BOOST_CHECK_EQUAL(resolve(unionOne_, unionTwo_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(string_, unionThree_), RESOLVE_MATCH);
 
 
         BOOST_CHECK_EQUAL(resolve(string_, bytes_), RESOLVE_MATCH);
@@ -1039,6 +1045,7 @@ private:
 
     ValidSchema unionOne_;
     ValidSchema unionTwo_;
+    ValidSchema unionThree_;
 };
 
 void testNestedArraySchema() {
