@@ -277,7 +277,7 @@ public:
         return (actualNode_.lock() != nullptr);
     }
 
-    NodePtr getNode() const {
+    NodePtr getNode() const override {
         NodePtr node = actualNode_.lock();
         if (!node) {
             throw Exception("Could not follow symbol {}", name());
