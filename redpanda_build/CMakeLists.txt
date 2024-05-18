@@ -44,7 +44,39 @@ target_link_libraries(avro
     Boost::system)
 
 target_include_directories(avro
-  PUBLIC ../lang/c++/include Boost::boost
-  PRIVATE ../lang/c++/include/avro)
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lang/c++/include/avro>
+    $<INSTALL_INTERFACE:include/avro>)
 
 add_library(Avro::avro ALIAS avro)
+
+install(
+  TARGETS avro
+  EXPORT AvroTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION lib)
+
+install(
+  DIRECTORY ../lang/c++/include/avro/
+  DESTINATION include/avro
+  FILES_MATCHING PATTERN *.hh)
+
+install(EXPORT AvroTargets NAMESPACE Avro:: DESTINATION share/avro)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/AvroConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake
+  INSTALL_DESTINATION share/avro)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake
+  VERSION 1.0.0
+  COMPATIBILITY SameMajorVersion)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/AvroConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/AvroConfigVersion.cmake
+  DESTINATION share/avro)
