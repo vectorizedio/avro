@@ -27,6 +27,7 @@
 #include "buffer/Buffer.hh"
 
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -89,7 +90,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     /**
      * Shared constructor portion since we aren't using C++11
      */
-    void init(const ValidSchema &schema, size_t syncInterval, const Codec &codec);
+    void init(const ValidSchema &schema, size_t syncInterval, const Codec &codec, const std::map<std::string, std::string> &customMetadata);
 
 public:
     /**
@@ -118,9 +119,9 @@ public:
      * Constructs a data file writer with the given sync interval and name.
      */
     DataFileWriterBase(const char *filename, const ValidSchema &schema,
-                       size_t syncInterval, Codec codec = NULL_CODEC);
+                       size_t syncInterval, Codec codec = NULL_CODEC, const std::map<std::string, std::string> &customMetadata = {});
     DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                       const ValidSchema &schema, size_t syncInterval, Codec codec);
+                       const ValidSchema &schema, size_t syncInterval, Codec codec, const std::map<std::string, std::string> &customMetadata = {});
 
     ~DataFileWriterBase();
     /**
@@ -152,10 +153,10 @@ public:
      * Constructs a new data file.
      */
     DataFileWriter(const char *filename, const ValidSchema &schema,
-                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) {}
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC, const std::map<std::string, std::string> &customMetadata = {}) : base_(new DataFileWriterBase(filename, schema, syncInterval, codec, customMetadata)) {}
 
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
-                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC, const std::map<std::string, std::string> &customMetadata = {}) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec, customMetadata)) {}
 
     /**
      * Writes the given piece of data into the file.
@@ -206,7 +207,6 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     DecoderPtr dataDecoder_;
     std::unique_ptr<InputStream> dataStream_;
     typedef std::map<std::string, std::vector<uint8_t>> Metadata;
-
     Metadata metadata_;
     DataFileSync sync_{};
 
@@ -269,6 +269,12 @@ public:
      * Returns the schema stored with the data file.
      */
     const ValidSchema &dataSchema() { return dataSchema_; }
+
+
+    /**
+     * Gets a metadata key/value pair for the file.
+     */
+    std::optional<std::string> getMetadata(const std::string& key);
 
     /**
      * Closes the reader. No further operation is possible on this reader.
@@ -381,6 +387,13 @@ public:
      * Returns the schema stored with the data file.
      */
     const ValidSchema &dataSchema() { return base_->dataSchema(); }
+
+    /**
+     * Gets a metadata key/value pair for the file.
+     */
+    std::optional<std::string> getMetadata(const std::string& key) {
+        return base_->getMetadata(key);
+    }
 
     /**
      * Closes the reader. No further operation is possible on this reader.
