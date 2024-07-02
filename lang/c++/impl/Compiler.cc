@@ -362,6 +362,8 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
         t = LogicalType::DURATION;
     else if (typeField == "uuid")
         t = LogicalType::UUID;
+    else if (typeField == "map")
+        t = LogicalType::MAP;
     return LogicalType(t);
 }
 
