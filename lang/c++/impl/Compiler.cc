@@ -435,8 +435,12 @@ static NodePtr makeFixedNode(const Entity &e,
 static NodePtr makeArrayNode(const Entity &e, const Object &m,
                              SymbolTable &st, const string &ns) {
     auto it = findField(e, m, "items");
-    NodePtr node = NodePtr(std::make_shared<NodeArray>(
-        asSingleAttribute(makeNode(it->second, st, ns))));
+    std::shared_ptr<NodeArray> nodePointer = std::make_shared<NodeArray>(
+        asSingleAttribute(makeNode(it->second, st, ns)));
+    NodePtr node = NodePtr(nodePointer);
+    if (containsField(m, "element-id")) {
+        nodePointer->elementId_ = getStringField(e, m, "element-id");
+    }
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
