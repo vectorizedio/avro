@@ -519,6 +519,15 @@ void NodeArray::printJson(std::ostream &os, size_t depth) const {
         os << indent(depth + 1) << R"("doc": ")"
            << escape(getDoc()) << "\",\n";
     }
+    if (logicalType().type() != LogicalType::NONE) {
+        os << indent(depth);
+        logicalType().printJson(os);
+        os << ",\n";
+    }
+    if (!elementId_.empty()) {
+        os << indent(depth + 1) << R"("element-id": ")"
+           << escape(elementId_) << "\",\n";
+    }
     os << indent(depth + 1) << "\"items\": ";
     leafAttributes_.get()->printJson(os, depth + 1);
     os << '\n';

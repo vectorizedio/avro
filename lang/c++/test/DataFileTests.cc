@@ -658,6 +658,26 @@ public:
             BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
+
+    void testWriteCustomMetadata() {
+        uint32_t a = 42;
+        {
+            avro::DataFileWriter<uint32_t> df(filename, writerSchema, 16 * 1024, avro::NULL_CODEC, {{"test_key_1", "test_value_1"}, {"test_key_2", "test_value_2"}});
+            df.write(a);
+        }
+
+        {
+
+            avro::DataFileReader<uint32_t> df(filename);
+            auto val_1 = df.getMetadata("test_key_1");
+            BOOST_CHECK(val_1.has_value());
+            BOOST_CHECK_EQUAL(val_1.value(), "test_value_1");
+
+            auto val_2 = df.getMetadata("test_key_2");
+            BOOST_CHECK(val_2.has_value());
+            BOOST_CHECK_EQUAL(val_2.value(), "test_value_2");
+        }
+    }
 };
 
 void addReaderTests(test_suite *ts, const shared_ptr<DataFileTest> &t) {
@@ -1122,6 +1142,15 @@ init_unit_test_suite(int argc, char *argv[]) {
         shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+
+    {
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test13.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test13.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteCustomMetadata, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }

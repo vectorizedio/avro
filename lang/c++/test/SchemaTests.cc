@@ -199,6 +199,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"array","items":"long"})",
     "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
+    R"({"type":"array","element-id":"testElemId","items":"long"})",
 
     // Map
     R"({"type":"map","values":"long"})",
@@ -380,6 +381,26 @@ static void testLogicalTypes() {
     const char* unionType = "[\n\
         {\"type\":\"string\", \"logicalType\":\"uuid\"},\"null\"\n\
     ]";
+    const char* arrayMapType = R"({
+        "type": "array",
+        "logicalType": "map",
+        "items": {
+            "type": "record",
+            "name": "k1_v2",
+            "fields": [
+            {
+                "name": "key",
+                "type": "int",
+                "field-id": "1"
+            },
+            {
+                "name": "value",
+                "type": "long",
+                "field-id": "2"
+            }
+            ]
+        }
+    })";
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
@@ -473,6 +494,15 @@ static void testLogicalTypes() {
         BOOST_CHECK(logicalType.type() == LogicalType::NONE);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(arrayMapType);
+        ValidSchema schema = compileJsonSchemaFromString(arrayMapType);
+        BOOST_CHECK(schema.root()->type() == AVRO_ARRAY);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::MAP);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::MAP);
     }
 }
 

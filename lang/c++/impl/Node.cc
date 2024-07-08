@@ -142,6 +142,12 @@ void Node::setLogicalType(LogicalType logicalType) {
                                 "STRING type");
             }
             break;
+        case LogicalType::MAP:
+            if (type_ != AVRO_ARRAY) {
+                throw Exception("MAP logical type can only annotate "
+                                "ARRAY type");
+            }
+            break;
     }
 
     logicalType_ = logicalType;
