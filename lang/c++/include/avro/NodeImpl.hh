@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <utility>
@@ -390,7 +391,7 @@ public:
 
     void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 
-    std::string elementId_;
+    std::optional<int64_t> elementId_;
 };
 
 class AVRO_DECL NodeMap : public NodeImplMap {

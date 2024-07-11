@@ -439,7 +439,7 @@ static NodePtr makeArrayNode(const Entity &e, const Object &m,
         asSingleAttribute(makeNode(it->second, st, ns)));
     NodePtr node = NodePtr(nodePointer);
     if (containsField(m, "element-id")) {
-        nodePointer->elementId_ = getStringField(e, m, "element-id");
+        nodePointer->elementId_ = getLongField(e, m, "element-id");
     }
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));

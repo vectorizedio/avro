@@ -198,7 +198,7 @@ const char *roundTripSchemas[] = {
     R"({"type":"array","items":"long"})",
     "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
-    R"({"type":"array","element-id":"testElemId","items":"long"})",
+    R"({"type":"array","element-id":42,"items":"long"})",
 
     // Map
     R"({"type":"map","values":"long"})",
