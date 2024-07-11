@@ -1,12 +1,26 @@
 cmake_minimum_required(VERSION 3.22)
 project(avro)
 
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../VERSION.txt)
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../VERSION.txt" AVRO_VERSION)
+else (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../VERSION.txt)
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../share/VERSION.txt"
+        AVRO_VERSION)
+endif (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../VERSION.txt)
+
+string(REPLACE "\n" "" AVRO_VERSION  ${AVRO_VERSION})
+string(REPLACE "." ";" AVRO_VERSION  ${AVRO_VERSION})
+list(GET AVRO_VERSION 0 AVRO_VERSION_MAJOR)
+list(GET AVRO_VERSION 1 AVRO_VERSION_MINOR)
+list(GET AVRO_VERSION 2 AVRO_VERSION_PATCH)
+add_definitions (-DAVRO_VERSION="${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH}")
+
 list(APPEND CMAKE_MODULE_PATH ../lang/c++/cmake)
 
 find_package(Snappy)
 
 find_package (Boost 1.74 REQUIRED
-  COMPONENTS iostreams system)
+  COMPONENTS iostreams system program_options regex)
 
 add_library(avro
   ../lang/c++/impl/Compiler.cc
@@ -48,3 +62,7 @@ target_include_directories(avro
   PRIVATE ../lang/c++/include/avro)
 
 add_library(Avro::avro ALIAS avro)
+
+add_executable (avrogencpp ../lang/c++/impl/avrogencpp.cc)
+target_include_directories(avrogencpp PRIVATE ../lang/c++/include/avro)
+target_link_libraries (avrogencpp avro ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
