@@ -247,19 +247,15 @@ const char schemaFilename<umu::r1>::value[] = "jsonschemas/union_map_union";
 
 template<typename T>
 void testEncoding2() {
-    ValidSchema s;
-    ifstream ifs(schemaFilename<T>::value);
-    compileJsonSchema(ifs, s);
-
     unique_ptr<OutputStream> os = memoryOutputStream();
-    EncoderPtr e = validatingEncoder(s, binaryEncoder());
+    EncoderPtr e = validatingEncoder(T::valid_schema(), binaryEncoder());
     e->init(*os);
     T t1;
     setRecord(t1);
     avro::encode(*e, t1);
     e->flush();
 
-    DecoderPtr d = validatingDecoder(s, binaryDecoder());
+    DecoderPtr d = validatingDecoder(T::valid_schema(), binaryDecoder());
     unique_ptr<InputStream> is = memoryInputStream(*os);
     d->init(*is);
     T t2;
