@@ -59,6 +59,53 @@ using avro::ValidSchema;
 #define ANY_NS "boost"
 #endif
 
+namespace {
+
+// Escape string for serialization.
+string escape(const string &unescaped) {
+    string s;
+    s.reserve(unescaped.length());
+    for (char c : unescaped) {
+        switch (c) {
+            case '\\':
+            case '"':
+            case '/':
+                s += '\\';
+                s += c;
+                break;
+            case '\b':
+                s += '\\';
+                s += 'b';
+                break;
+            case '\f':
+                s += '\f';
+                break;
+            case '\n':
+                s += '\\';
+                s += 'n';
+                break;
+            case '\r':
+                s += '\\';
+                s += 'r';
+                break;
+            case '\t':
+                s += '\\';
+                s += 't';
+                break;
+            default:
+                if (!std::iscntrl(c, std::locale::classic())) {
+                    s += c;
+                    continue;
+                }
+                s += avro::intToHex(static_cast<unsigned int>(c));
+                break;
+        }
+    }
+    return s;
+}
+
+} // anonymous namespace
+
 struct PendingSetterGetter {
     string structName;
     string type;
@@ -93,16 +140,18 @@ class CodeGen {
     map<NodePtr, string> done;
     set<NodePtr> doing;
 
+    using OptSchemaRef = std::optional<std::reference_wrapper<const ValidSchema>>;
+
     std::string guard();
     std::string fullname(const string &name) const;
     std::string generateEnumType(const NodePtr &n);
     std::string cppTypeOf(const NodePtr &n);
-    std::string generateRecordType(const NodePtr &n);
+    std::string generateRecordType(const NodePtr &n, OptSchemaRef emittedSchema = std::nullopt);
     std::string unionName();
     std::string generateUnionType(const NodePtr &n);
-    std::string generateType(const NodePtr &n);
+    std::string generateType(const NodePtr &n, OptSchemaRef emittedSchema = std::nullopt);
     std::string generateDeclaration(const NodePtr &n);
-    std::string doGenerateType(const NodePtr &n);
+    std::string doGenerateType(const NodePtr &n, OptSchemaRef emittedSchema = std::nullopt);
     void generateEnumTraits(const NodePtr &n);
     void generateTraits(const NodePtr &n);
     void generateRecordTraits(const NodePtr &n);
@@ -231,7 +280,24 @@ static string cppNameOf(const NodePtr &n) {
     }
 }
 
-string CodeGen::generateRecordType(const NodePtr &n) {
+namespace {
+
+std::string toString(const ValidSchema& schema) {
+    std::stringstream ss;
+    schema.toJson(ss);
+    std::string s = ss.str();
+    s.erase(remove_if(s.begin(), s.end(), ::isspace), s.end());
+    return s;
+}
+
+std::string toEscapedString(const ValidSchema& schema) {
+    auto str = toString(schema);
+    return escape(str);
+}
+
+} // anonymous namespace
+
+string CodeGen::generateRecordType(const NodePtr &n, OptSchemaRef emittedSchema) {
     size_t c = n->leaves();
     string decoratedName = decorate(n->name());
     vector<string> types;
@@ -258,6 +324,17 @@ string CodeGen::generateRecordType(const NodePtr &n) {
             }
         }
     }
+
+    if (emittedSchema.has_value()) {
+        os_ << "    static inline const char* schema_as_string() {\n";
+        os_ << "      return \"" << toEscapedString(*emittedSchema) << "\";\n";
+        os_ << "    } \n\n";
+        os_ << "    static const ::avro::ValidSchema& valid_schema() {\n";
+        os_ << "      static const auto& _validSchema = ::avro::compileJsonSchemaFromString(schema_as_string());\n";
+        os_ << "      return _validSchema;\n";
+        os_ << "    }\n\n";
+    }
+
     for (size_t i = 0; i < c; ++i) {
         // the nameAt(i) does not take c++ reserved words into account
         // so we need to call decorate on it
@@ -415,19 +492,19 @@ string CodeGen::generateUnionType(const NodePtr &n) {
 /**
  * Returns the type for the given schema node and emits code to os.
  */
-string CodeGen::generateType(const NodePtr &n) {
+string CodeGen::generateType(const NodePtr &n, OptSchemaRef emittedSchema) {
     NodePtr nn = (n->type() == avro::AVRO_SYMBOLIC) ? resolveSymbol(n) : n;
 
     map<NodePtr, string>::const_iterator it = done.find(nn);
     if (it != done.end()) {
         return it->second;
     }
-    string result = doGenerateType(nn);
+    string result = doGenerateType(nn, emittedSchema);
     done[nn] = result;
     return result;
 }
 
-string CodeGen::doGenerateType(const NodePtr &n) {
+string CodeGen::doGenerateType(const NodePtr &n, OptSchemaRef emittedSchema) {
     switch (n->type()) {
         case avro::AVRO_STRING:
         case avro::AVRO_BYTES:
@@ -464,7 +541,7 @@ string CodeGen::doGenerateType(const NodePtr &n) {
             return "std::map<std::string, " + dn + " >";
         }
         case avro::AVRO_RECORD:
-            return generateRecordType(n);
+            return generateRecordType(n, emittedSchema);
         case avro::AVRO_ENUM:
             return generateEnumType(n);
         case avro::AVRO_UNION:
@@ -734,6 +811,7 @@ void CodeGen::generate(const ValidSchema &schema) {
 #else
         << "#include \"boost/any.hpp\"\n"
 #endif
+        << "#include \"" << includePrefix_ << "Compiler.hh\"\n"
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
@@ -751,7 +829,7 @@ void CodeGen::generate(const ValidSchema &schema) {
     }
 
     const NodePtr &root = schema.root();
-    generateType(root);
+    generateType(root, schema);
 
     for (vector<PendingSetterGetter>::const_iterator it =
              pendingGettersAndSetters.begin();
