@@ -1081,6 +1081,26 @@ void testNestedMapSchema() {
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
+void testArraySchemaElementId() {
+    ArraySchema b0 = ArraySchema(NullSchema(), 2);
+    ArraySchema a0 = ArraySchema(b0, 1);
+
+    avro::ValidSchema vs(a0);
+    std::ostringstream actual;
+    vs.toJson(actual);
+
+    std::string expected = "{\n\
+    \"type\": \"array\",\n\
+    \"element-id\": 1,\n\
+    \"items\": {\n\
+        \"type\": \"array\",\n\
+        \"element-id\": 2,\n\
+        \"items\": \"null\"\n\
+    }\n\
+}\n";
+    BOOST_CHECK_EQUAL(expected, actual.str());
+}
+
 boost::unit_test::test_suite *
 init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
@@ -1101,6 +1121,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
                                     boost::make_shared<TestResolution>()));
     test->add(BOOST_TEST_CASE(&testNestedArraySchema));
     test->add(BOOST_TEST_CASE(&testNestedMapSchema));
+    test->add(BOOST_TEST_CASE(&testArraySchemaElementId));
 
     return test;
 }

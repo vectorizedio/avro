@@ -65,6 +65,10 @@ ArraySchema::ArraySchema(const ArraySchema &itemsSchema) : Schema(std::make_shar
     node_->addLeaf(itemsSchema.root());
 }
 
+ArraySchema::ArraySchema(const Schema &itemsSchema, int64_t elementId) : Schema(std::make_shared<NodeArray>(elementId)) {
+    node_->addLeaf(itemsSchema.root());
+}
+
 MapSchema::MapSchema(const Schema &valuesSchema) : Schema(std::make_shared<NodeMap>()) {
     node_->addLeaf(valuesSchema.root());
 }

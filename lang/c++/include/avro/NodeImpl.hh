@@ -378,6 +378,7 @@ public:
 class AVRO_DECL NodeArray : public NodeImplArray {
 public:
     NodeArray() : NodeImplArray(AVRO_ARRAY) {}
+    explicit NodeArray(int64_t elementId) : NodeImplArray(AVRO_ARRAY), elementId_(elementId) {}
 
     explicit NodeArray(const SingleLeaf &items) : NodeImplArray(AVRO_ARRAY, NoName(), items, NoLeafNames(), NoAttributes(), NoSize()) {}
 
