@@ -118,6 +118,7 @@ public:
 class AVRO_DECL ArraySchema : public Schema {
 public:
     explicit ArraySchema(const Schema &itemsSchema);
+    ArraySchema(const Schema &itemsSchema, int64_t elementId);
     ArraySchema(const ArraySchema &itemsSchema);
 };
 
