@@ -22,6 +22,8 @@ find_package(Snappy)
 find_package (Boost 1.74 REQUIRED
   COMPONENTS iostreams system program_options regex)
 
+find_package(fmt 8.1.1 REQUIRED)
+
 add_library(avro
   ../lang/c++/impl/Compiler.cc
   ../lang/c++/impl/Node.cc
@@ -55,7 +57,8 @@ endif()
 
 target_link_libraries(avro
     Boost::iostreams
-    Boost::system)
+    Boost::system
+    fmt::fmt)
 
 target_include_directories(avro
   PUBLIC ../lang/c++/include Boost::boost
