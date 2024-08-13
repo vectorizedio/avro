@@ -68,7 +68,7 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast -Wconversion -pedantic -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast -Wconversion -pedantic -Werror -Wno-dangling-reference -Wno-maybe-uninitialized")
 if (AVRO_ADD_PROTECTOR_FLAGS)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all -D_GLIBCXX_DEBUG")
     # Unset _GLIBCXX_DEBUG for avrogencpp.cc because using Boost Program Options
@@ -82,15 +82,7 @@ endif ()
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem iostreams program_options regex system)
 
-include(FetchContent)
-FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
-        GIT_TAG         10.2.1
-        GIT_PROGRESS    TRUE
-        USES_TERMINAL_DOWNLOAD TRUE
-)
-FetchContent_MakeAvailable(fmt)
+find_package(fmt 8.1.1 REQUIRED)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
@@ -239,7 +231,7 @@ install (TARGETS avrocpp avrocpp_s
 
 install (TARGETS avrogencpp RUNTIME DESTINATION bin)
 
-install (DIRECTORY include/avro DESTINATION include
+install (DIRECTORY include/avro/ DESTINATION include/avro
     FILES_MATCHING PATTERN *.hh)
 
 if (NOT CMAKE_BUILD_TYPE)

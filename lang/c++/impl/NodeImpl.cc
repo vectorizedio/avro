@@ -129,6 +129,24 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_DOUBLE;
             }
 
+        break;
+
+        case AVRO_BYTES:
+
+            if (reader.type() == AVRO_STRING) {
+                return RESOLVE_MATCH;
+            }
+
+            break;
+
+        case AVRO_STRING:
+
+            if (reader.type() == AVRO_BYTES) {
+                return RESOLVE_MATCH;
+            }
+
+            break;
+
         default: break;
     }
 
@@ -209,7 +227,7 @@ NodeFixed::resolve(const Node &reader) const {
 
 SchemaResolution
 NodeSymbolic::resolve(const Node &reader) const {
-    const NodePtr &node = leafAt(0);
+    const NodePtr &node = getNode();
     return node->resolve(reader);
 }
 
@@ -540,7 +558,15 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
         os << indent(depth) << '\"' << leafNameAttributes_.get(i) << '\"';
     }
     os << '\n';
-    os << indent(--depth) << "]\n";
+    os << indent(--depth) << "]";
+
+    if (defaultValue.type() != AVRO_NULL) {
+        os << ",\n"
+           << indent(depth) << "\"default\": ";
+        NodePrimitive{defaultValue.type()}.printDefaultToJson(defaultValue, os, depth);
+    }
+
+    os << "\n";
     os << indent(--depth) << '}';
 }
 
@@ -550,6 +576,15 @@ void NodeArray::printJson(std::ostream &os, size_t depth) const {
     if (!getDoc().empty()) {
         os << indent(depth + 1) << R"("doc": ")"
            << escape(getDoc()) << "\",\n";
+    }
+    if (logicalType().type() != LogicalType::NONE) {
+        os << indent(depth);
+        logicalType().printJson(os);
+        os << ",\n";
+    }
+    if (elementId_.has_value()) {
+        os << indent(depth + 1) << "\"element-id\": "
+           << *elementId_ << ",\n";
     }
     os << indent(depth + 1) << "\"items\": ";
     leafAttributes_.get()->printJson(os, depth + 1);
@@ -571,7 +606,7 @@ void NodeMap::printJson(std::ostream &os, size_t depth) const {
 }
 
 NodeMap::NodeMap() : NodeImplMap(AVRO_MAP) {
-    NodePtr key(new NodePrimitive(AVRO_STRING));
+    NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
     doAddLeaf(key);
 }
 

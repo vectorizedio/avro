@@ -23,7 +23,7 @@
 
 namespace avro {
 
-RecordSchema::RecordSchema(const std::string &name) : Schema(new NodeRecord) {
+RecordSchema::RecordSchema(const std::string &name) : Schema(std::make_shared<NodeRecord>()) {
     node_->setName(Name(name));
 }
 
@@ -49,7 +49,7 @@ void RecordSchema::setDoc(const std::string &doc) {
     node_->setDoc(doc);
 }
 
-EnumSchema::EnumSchema(const std::string &name) : Schema(new NodeEnum) {
+EnumSchema::EnumSchema(const std::string &name) : Schema(std::make_shared<NodeEnum>()) {
     node_->setName(Name(name));
 }
 
@@ -57,23 +57,27 @@ void EnumSchema::addSymbol(const std::string &symbol) {
     node_->addName(symbol);
 }
 
-ArraySchema::ArraySchema(const Schema &itemsSchema) : Schema(new NodeArray) {
+ArraySchema::ArraySchema(const Schema &itemsSchema) : Schema(std::make_shared<NodeArray>()) {
     node_->addLeaf(itemsSchema.root());
 }
 
-ArraySchema::ArraySchema(const ArraySchema &itemsSchema) : Schema(new NodeArray) {
+ArraySchema::ArraySchema(const ArraySchema &itemsSchema) : Schema(std::make_shared<NodeArray>()) {
     node_->addLeaf(itemsSchema.root());
 }
 
-MapSchema::MapSchema(const Schema &valuesSchema) : Schema(new NodeMap) {
+ArraySchema::ArraySchema(const Schema &itemsSchema, int64_t elementId) : Schema(std::make_shared<NodeArray>(elementId)) {
+    node_->addLeaf(itemsSchema.root());
+}
+
+MapSchema::MapSchema(const Schema &valuesSchema) : Schema(std::make_shared<NodeMap>()) {
     node_->addLeaf(valuesSchema.root());
 }
 
-MapSchema::MapSchema(const MapSchema &valuesSchema) : Schema(new NodeMap) {
+MapSchema::MapSchema(const MapSchema &valuesSchema) : Schema(std::make_shared<NodeMap>()) {
     node_->addLeaf(valuesSchema.root());
 }
 
-UnionSchema::UnionSchema() : Schema(new NodeUnion) {}
+UnionSchema::UnionSchema() : Schema(std::make_shared<NodeUnion>()) {}
 
 void UnionSchema::addType(const Schema &typeSchema) {
     if (typeSchema.type() == AVRO_UNION) {
@@ -95,12 +99,12 @@ void UnionSchema::addType(const Schema &typeSchema) {
     node_->addLeaf(typeSchema.root());
 }
 
-FixedSchema::FixedSchema(int size, const std::string &name) : Schema(new NodeFixed) {
+FixedSchema::FixedSchema(int size, const std::string &name) : Schema(std::make_shared<NodeFixed>()) {
     node_->setFixedSize(size);
     node_->setName(Name(name));
 }
 
-SymbolicSchema::SymbolicSchema(const Name &name, const NodePtr &link) : Schema(new NodeSymbolic(HasName(name), link)) {
+SymbolicSchema::SymbolicSchema(const Name &name, const NodePtr &link) : Schema(std::make_shared<NodeSymbolic>(HasName(name), link)) {
 }
 
 } // namespace avro

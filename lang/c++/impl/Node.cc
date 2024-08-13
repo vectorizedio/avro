@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <unordered_set>
 
@@ -199,6 +200,12 @@ void Node::setLogicalType(LogicalType logicalType) {
             if (type_ != AVRO_STRING) {
                 throw Exception("UUID logical type can only annotate "
                                 "STRING type");
+            }
+            break;
+        case LogicalType::MAP:
+            if (type_ != AVRO_ARRAY) {
+                throw Exception("MAP logical type can only annotate "
+                                "ARRAY type");
             }
             break;
     }

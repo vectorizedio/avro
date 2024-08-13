@@ -77,6 +77,9 @@ void LogicalType::printJson(std::ostream &os) const {
         case UUID:
             os << R"("logicalType": "uuid")";
             break;
+        case MAP:
+            os << R"("logicalType": "map")";
+            break;
     }
 }
 

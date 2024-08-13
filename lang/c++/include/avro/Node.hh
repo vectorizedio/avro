@@ -96,7 +96,8 @@ inline std::ostream &operator<<(std::ostream &os, const Name &n) {
 /// different node types.
 ///
 
-class AVRO_DECL Node : private boost::noncopyable {
+class AVRO_DECL Node : public std::enable_shared_from_this<Node>,
+                       private boost::noncopyable {
 public:
     explicit Node(Type type) : type_(type),
                                logicalType_(LogicalType::NONE),
@@ -143,7 +144,7 @@ public:
     }
     virtual size_t leaves() const = 0;
     virtual const NodePtr &leafAt(size_t index) const = 0;
-    virtual const GenericDatum &defaultValueAt(size_t index) {
+    virtual const GenericDatum &defaultValueAt(size_t index) const {
         throw Exception("No default value at: {}", index);
     }
 
@@ -181,6 +182,10 @@ public:
     // in a record node.
     virtual void printDefaultToJson(const GenericDatum &g, std::ostream &os,
                                     size_t depth) const = 0;
+
+    virtual NodePtr getNode() const {
+        return const_cast<Node *>(this)->shared_from_this();
+    };
 
 protected:
     void checkLock() const {

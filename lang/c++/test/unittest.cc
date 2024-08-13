@@ -457,12 +457,12 @@ struct TestSchema {
         std::string expectedJsonWithCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\", "
-            "\"arrayField\": \"[1]\", "
-            "\"booleanField\": \"true\", "
-            "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
-            "\"nullField\": \"null\", "
-            "\"numberField\": \"1.23\", "
-            "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+            "\"arrayField\": [1], "
+            "\"booleanField\": true, "
+            "\"mapField\": {\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}, "
+            "\"nullField\": null, "
+            "\"numberField\": 1.23, "
+            "\"stringField\": \\\"field value with \\\"double quotes\\\"\\\""
             "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                        expectedJsonWithCustomAttribute);
@@ -925,6 +925,8 @@ struct TestResolution {
                        bool_(BoolSchema()),
                        float_(FloatSchema()),
                        double_(DoubleSchema()),
+                       string_(StringSchema()),
+                       bytes_(BytesSchema()),
 
                        mapOfInt_(MapSchema(IntSchema())),
                        mapOfDouble_(MapSchema(DoubleSchema())),
@@ -951,6 +953,11 @@ struct TestResolution {
             two.addType(IntSchema());
             two.addType(DoubleSchema());
             unionTwo_.setSchema(two);
+
+            UnionSchema three;
+            three.addType(NullSchema());
+            three.addType(StringSchema());
+            unionThree_.setSchema(three);
         }
     }
 
@@ -1008,6 +1015,11 @@ struct TestResolution {
         BOOST_CHECK_EQUAL(resolve(unionOne_, double_), RESOLVE_PROMOTABLE_TO_DOUBLE);
         BOOST_CHECK_EQUAL(resolve(unionTwo_, float_), RESOLVE_PROMOTABLE_TO_FLOAT);
         BOOST_CHECK_EQUAL(resolve(unionOne_, unionTwo_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(string_, unionThree_), RESOLVE_MATCH);
+
+
+        BOOST_CHECK_EQUAL(resolve(string_, bytes_), RESOLVE_MATCH);
+        BOOST_CHECK_EQUAL(resolve(bytes_, string_), RESOLVE_MATCH);
     }
 
 private:
@@ -1016,6 +1028,8 @@ private:
     ValidSchema bool_;
     ValidSchema float_;
     ValidSchema double_;
+    ValidSchema string_;
+    ValidSchema bytes_;
 
     ValidSchema mapOfInt_;
     ValidSchema mapOfDouble_;
@@ -1028,6 +1042,7 @@ private:
 
     ValidSchema unionOne_;
     ValidSchema unionTwo_;
+    ValidSchema unionThree_;
 };
 
 void testNestedArraySchema() {
@@ -1066,6 +1081,26 @@ void testNestedMapSchema() {
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
+void testArraySchemaElementId() {
+    ArraySchema b0 = ArraySchema(NullSchema(), 2);
+    ArraySchema a0 = ArraySchema(b0, 1);
+
+    avro::ValidSchema vs(a0);
+    std::ostringstream actual;
+    vs.toJson(actual);
+
+    std::string expected = "{\n\
+    \"type\": \"array\",\n\
+    \"element-id\": 1,\n\
+    \"items\": {\n\
+        \"type\": \"array\",\n\
+        \"element-id\": 2,\n\
+        \"items\": \"null\"\n\
+    }\n\
+}\n";
+    BOOST_CHECK_EQUAL(expected, actual.str());
+}
+
 boost::unit_test::test_suite *
 init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
@@ -1086,6 +1121,7 @@ init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
                                     boost::make_shared<TestResolution>()));
     test->add(BOOST_TEST_CASE(&testNestedArraySchema));
     test->add(BOOST_TEST_CASE(&testNestedMapSchema));
+    test->add(BOOST_TEST_CASE(&testArraySchemaElementId));
 
     return test;
 }

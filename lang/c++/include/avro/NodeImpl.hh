@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <utility>
@@ -170,7 +171,7 @@ protected:
         if (reader.type() == AVRO_SYMBOLIC) {
 
             // resolve the symbolic type, and check again
-            const NodePtr &node = reader.leafAt(0);
+            const NodePtr &node = reader.getNode();
             match = resolve(*node);
         } else if (reader.type() == AVRO_UNION) {
 
@@ -277,7 +278,7 @@ public:
         return (actualNode_.lock() != nullptr);
     }
 
-    NodePtr getNode() const {
+    NodePtr getNode() const override {
         NodePtr node = actualNode_.lock();
         if (!node) {
             throw Exception("Could not follow symbol {}", name());
@@ -328,7 +329,7 @@ public:
         return ((nameAttribute_.size() == 1) && (leafAttributes_.size() == leafNameAttributes_.size()) && (customAttributes_.size() == 0 || customAttributes_.size() == leafAttributes_.size()));
     }
 
-    const GenericDatum &defaultValueAt(size_t index) override {
+    const GenericDatum &defaultValueAt(size_t index) const override {
         return fieldsDefaultValues_[index];
     }
 
@@ -336,15 +337,23 @@ public:
 };
 
 class AVRO_DECL NodeEnum : public NodeImplEnum {
+    GenericDatum defaultValue;
+
 public:
     NodeEnum() : NodeImplEnum(AVRO_ENUM) {}
 
-    NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()) {
+    NodeEnum(const HasName &name, const LeafNames &symbols, GenericDatum dv) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()), defaultValue(std::move(dv)) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception("Cannot add duplicate enum: {}", leafNameAttributes_.get(i));
             }
         }
+    }
+
+    void swap(NodeEnum &r) {
+        NodeImplEnum::swap(r);
+        using std::swap;
+        swap(defaultValue, r.defaultValue);
     }
 
     SchemaResolution resolve(const Node &reader) const override;
@@ -356,12 +365,20 @@ public:
             (nameAttribute_.size() == 1) && (leafNameAttributes_.size() > 0));
     }
 
+    const GenericDatum &defaultValueAt(size_t index) const override {
+        if (index != 0) {
+            throw Exception("Enum has only 1 default");
+        }
+        return defaultValue;
+    }
+
     void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeArray : public NodeImplArray {
 public:
     NodeArray() : NodeImplArray(AVRO_ARRAY) {}
+    explicit NodeArray(int64_t elementId) : NodeImplArray(AVRO_ARRAY), elementId_(elementId) {}
 
     explicit NodeArray(const SingleLeaf &items) : NodeImplArray(AVRO_ARRAY, NoName(), items, NoLeafNames(), NoAttributes(), NoSize()) {}
 
@@ -374,6 +391,8 @@ public:
     }
 
     void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
+
+    std::optional<int64_t> elementId_;
 };
 
 class AVRO_DECL NodeMap : public NodeImplMap {
@@ -382,7 +401,7 @@ public:
 
     explicit NodeMap(const SingleLeaf &values) : NodeImplMap(AVRO_MAP, NoName(), MultiLeaves(values), NoLeafNames(), NoAttributes(), NoSize()) {
         // need to add the key for the map too
-        NodePtr key(new NodePrimitive(AVRO_STRING));
+        NodePtr key(std::make_shared<NodePrimitive>(AVRO_STRING));
         doAddLeaf(key);
 
         // key goes before value
@@ -499,10 +518,8 @@ NodeImpl<A, B, C, D, E>::setLeafToSymbolic(size_t index, const NodePtr &node) {
         throw Exception("Symbolic name does not match the name of the schema it references");
     }
 
-    auto symbol = std::make_shared<NodeSymbolic>();
-    symbol->setName(node->name());
-    symbol->setNode(node);
-    replaceNode = symbol;
+    NodePtr symbol = std::make_shared<NodeSymbolic>(HasName(node->name()), node);
+    replaceNode.swap(symbol);
 }
 
 template<class A, class B, class C, class D, class E>

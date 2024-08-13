@@ -63,7 +63,7 @@ const char *basicSchemas[] = {
     "\"fields\":[{\"name\":\"value\",\"type\":\"long\",\"doc\":\"recursive_doc\"},"
     "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
-    R"({"type":"enum","doc":"enum_doc","name":"Test","symbols":["A","B"]})",
+    R"({"type":"enum","doc":"enum_doc","name":"Test","symbols":["A","B","C"],"default":"C"})",
 
     // Array
     R"({"type":"array","doc":"array_doc","items":"long"})",
@@ -138,6 +138,12 @@ const char *basicSchemaErrors[] = {
     // Duplicate symbol
     "{\"type\": \"enum\", \"name\": \"Test\","
     "\"symbols\" : [\"AA\", \"AA\"]}",
+    // Default not a string
+    "{\"type\": \"enum\", \"name\": \"Test\","
+        "\"symbols\" : [\"AA\", \"BB\"],\"default\":42}",
+    // Default not in symbols
+    "{\"type\": \"enum\", \"name\": \"Test\","
+        "\"symbols\" : [\"AA\", \"BB\"],\"default\":\"CC\"}",
 
     // Union
     // Duplicate type
@@ -186,12 +192,13 @@ const char *roundTripSchemas[] = {
     "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
     "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
-    R"({"type":"enum","name":"Test","symbols":["A","B"]})",
+    R"({"type":"enum","name":"Test","symbols":["A","B","C"],"default":"C"})",
 
     // Array
     R"({"type":"array","items":"long"})",
     "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
+    R"({"type":"array","element-id":42,"items":"long"})",
 
     // Map
     R"({"type":"map","values":"long"})",
@@ -227,6 +234,9 @@ const char *roundTripSchemas[] = {
     // Custom fields
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
+    "{\"name\":\"f2\",\"type\":\"int\"}]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+    "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":true},"
     "{\"name\":\"f2\",\"type\":\"int\"}]}",
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
@@ -307,11 +317,11 @@ static void testRoundTrip(const char *schema) {
     compiledSchema.toJson(os);
     std::string result = os.str();
     result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
-    BOOST_CHECK(result == std::string(schema));
+    BOOST_CHECK_EQUAL(result, std::string(schema));
     // Verify that the compact schema from toJson has the same content as the
     // schema.
     std::string result2 = compiledSchema.toJson(false);
-    BOOST_CHECK(result2 == std::string(schema));
+    BOOST_CHECK_EQUAL(result2, std::string(schema));
 }
 
 static void testCompactSchemas() {
@@ -370,6 +380,26 @@ static void testLogicalTypes() {
     const char *unionType = "[\n\
         {\"type\":\"string\", \"logicalType\":\"uuid\"},\"null\"\n\
     ]";
+    const char* arrayMapType = R"({
+        "type": "array",
+        "logicalType": "map",
+        "items": {
+            "type": "record",
+            "name": "k1_v2",
+            "fields": [
+            {
+                "name": "key",
+                "type": "int",
+                "field-id": "1"
+            },
+            {
+                "name": "value",
+                "type": "long",
+                "field-id": "2"
+            }
+            ]
+        }
+    })";
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
@@ -463,6 +493,15 @@ static void testLogicalTypes() {
         BOOST_CHECK(logicalType.type() == LogicalType::NONE);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(arrayMapType);
+        ValidSchema schema = compileJsonSchemaFromString(arrayMapType);
+        BOOST_CHECK(schema.root()->type() == AVRO_ARRAY);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::MAP);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::MAP);
     }
 }
 

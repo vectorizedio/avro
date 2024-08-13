@@ -20,6 +20,8 @@
 #include "Compiler.hh"
 #include "Exception.hh"
 
+#include <map>
+#include <optional>
 #include <sstream>
 
 #include <boost/crc.hpp> // for boost::crc_32_type
@@ -64,7 +66,7 @@ boost::iostreams::zlib_params get_zlib_params() {
 } // namespace
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
-                                       Codec codec) : filename_(filename),
+                                       Codec codec, const std::map<std::string, std::string> &customMetadata) : filename_(filename),
                                                       schema_(schema),
                                                       encoderPtr_(binaryEncoder()),
                                                       syncInterval_(syncInterval),
@@ -74,11 +76,11 @@ DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &
                                                       sync_(makeSync()),
                                                       objectCount_(0),
                                                       lastSync_(0) {
-    init(schema, syncInterval, codec);
+    init(schema, syncInterval, codec, customMetadata);
 }
 
 DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                                       const ValidSchema &schema, size_t syncInterval, Codec codec) : filename_(),
+                                       const ValidSchema &schema, size_t syncInterval, Codec codec, const std::map<std::string, std::string> &customMetadata) : filename_(),
                                                                                                       schema_(schema),
                                                                                                       encoderPtr_(binaryEncoder()),
                                                                                                       syncInterval_(syncInterval),
@@ -88,10 +90,10 @@ DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStrea
                                                                                                       sync_(makeSync()),
                                                                                                       objectCount_(0),
                                                                                                       lastSync_(0) {
-    init(schema, syncInterval, codec);
+    init(schema, syncInterval, codec, customMetadata);
 }
 
-void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec) {
+void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec, const std::map<std::string, std::string> &customMetadata) {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(
             "Invalid sync interval: {}. Should be between {} and {}",
@@ -111,6 +113,9 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
         throw Exception("Unknown codec: {}", int(codec));
     }
     setMetadata(AVRO_SCHEMA_KEY, schema.toJson(false));
+    for (const auto &kv : customMetadata) {
+        setMetadata(kv.first, kv.second);
+    }
 
     writeHeader();
     encoderPtr_->init(*buffer_);
@@ -561,6 +566,14 @@ bool DataFileReaderBase::pastSync(int64_t position) {
 
 int64_t DataFileReaderBase::previousSync() const {
     return blockStart_;
+}
+
+std::optional<std::string> DataFileReaderBase::getMetadata(const std::string& key) {
+    if (auto it = metadata_.find(key); it == metadata_.cend()) {
+        return std::nullopt;
+    } else {
+        return std::string(it->second.cbegin(), it->second.cend());
+    }
 }
 
 } // namespace avro
