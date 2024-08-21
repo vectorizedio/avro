@@ -147,6 +147,14 @@ protected:
         return nameIndex_.lookup(name, index);
     }
 
+    size_t customAttributes() const override {
+        return customAttributes_.size();
+    }
+
+    const CustomAttributes& customAttributesAt(size_t index) const override {
+        return customAttributes_.get(index);
+    }
+
     void doSetFixedSize(size_t size) override {
         sizeAttribute_.add(size);
     }

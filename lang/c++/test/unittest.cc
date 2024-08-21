@@ -500,6 +500,42 @@ struct TestSchema {
         BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").is_initialized());
     }
 
+    void checkCustomAttributesFromNode()
+    {
+        std::string jsonWithCustomAttribute = R"(
+        {"type": "record", "name": "Test","fields":
+        [{"name": "f1", "type": "long",
+        "arrayField": [1],
+        "booleanField": true,
+        "mapField": {"key1":"value1", "key2":"value2"},
+        "nullField": null,
+        "numberField": 1.23,
+        "stringField": "field value with \"double quotes\""
+        }]}
+        )";
+        auto schema = avro::compileJsonSchemaFromString(jsonWithCustomAttribute);
+        const auto& nodePtr = schema.root();
+        BOOST_CHECK_EQUAL(nodePtr->type(), AVRO_RECORD);
+        BOOST_CHECK_EQUAL(1, nodePtr->customAttributes());
+        const auto& attrs = nodePtr->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(6, attrs.attributes().size());
+        BOOST_CHECK_THROW(nodePtr->customAttributesAt(1), std::out_of_range);
+    }
+
+    void checkNoCustomAttributesFromNode()
+    {
+        std::string jsonNoCustomAttribute =
+        "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
+        "[{\"name\": \"f1\", \"type\": \"long\"}]}";
+        auto schema = avro::compileJsonSchemaFromString(jsonNoCustomAttribute);
+        const auto& nodePtr = schema.root();
+        BOOST_CHECK_EQUAL(nodePtr->type(), AVRO_RECORD);
+        BOOST_CHECK_EQUAL(1, nodePtr->customAttributes());
+        const auto& attrs = nodePtr->customAttributesAt(0);
+        BOOST_CHECK_EQUAL(0, attrs.attributes().size());
+        BOOST_CHECK_THROW(nodePtr->customAttributesAt(1), std::out_of_range);
+    }
+
     void test() {
         std::cout << "Before\n";
         schema_.toJson(std::cout);
@@ -525,6 +561,8 @@ struct TestSchema {
         checkNodeRecordWithoutCustomAttribute();
         checkNodeRecordWithCustomAttribute();
         checkCustomAttributes_getAttribute();
+        checkCustomAttributesFromNode();
+        checkNoCustomAttributesFromNode();
     }
 
     ValidSchema schema_;
