@@ -172,7 +172,9 @@ protected:
     void doAddCustomAttribute(const CustomAttributes &customAttributes) override {
         customAttributes_.add(customAttributes);
     }
-
+    void doAddDefault(const GenericDatum &) override {
+        throw Exception("Default only permitted for records");
+    }
     SchemaResolution furtherResolution(const Node &reader) const {
         SchemaResolution match = RESOLVE_NO_MATCH;
 
@@ -340,6 +342,10 @@ public:
     const GenericDatum &defaultValueAt(size_t index) const override {
         return fieldsDefaultValues_[index];
     }
+    void doAddDefault(const GenericDatum &fieldDefault) override {
+        fieldsDefaultValues_.push_back(fieldDefault);
+    }
+
 
     void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };

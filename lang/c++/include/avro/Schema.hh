@@ -104,6 +104,10 @@ public:
     // Add a field with custom attributes
     void addField(const std::string &name, const Schema &fieldSchema,
                   const CustomAttributes &customAttributes);
+    // Add a field with a field default
+    void addField(const std::string &name, const Schema &fieldSchema,
+                  const CustomAttributes &customAttributes,
+                  const GenericDatum &fieldDefault);
 
     std::string getDoc() const;
     void setDoc(const std::string &);
