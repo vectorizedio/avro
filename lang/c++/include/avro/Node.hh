@@ -167,6 +167,10 @@ public:
         checkLock();
         doAddCustomAttribute(customAttributes);
     }
+    void addDefaultForField(const GenericDatum &fieldDefault) {
+        checkLock();
+        doAddDefault(fieldDefault);
+    }
 
     virtual size_t customAttributes() const = 0;
     virtual const CustomAttributes& customAttributesAt(size_t index) const = 0;
@@ -208,6 +212,7 @@ protected:
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(size_t size) = 0;
     virtual void doAddCustomAttribute(const CustomAttributes &customAttributes) = 0;
+    virtual void doAddDefault(const GenericDatum &fieldDefault) = 0;
 
 private:
     const Type type_;

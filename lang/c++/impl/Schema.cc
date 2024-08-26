@@ -33,6 +33,12 @@ void RecordSchema::addField(const std::string &name, const Schema &fieldSchema) 
 }
 
 void RecordSchema::addField(const std::string &name, const Schema &fieldSchema, const CustomAttributes &customFields) {
+    // NOTE: GenericDatum() is the value used when compiling a schema if there
+    // is no default.
+    addField(name, fieldSchema, customFields, GenericDatum());
+}
+
+void RecordSchema::addField(const std::string &name, const Schema &fieldSchema, const CustomAttributes &customFields, const GenericDatum &fieldDefault) {
     // add the name first. it will throw if the name is a duplicate, preventing
     // the leaf from being added
     node_->addName(name);
@@ -40,6 +46,8 @@ void RecordSchema::addField(const std::string &name, const Schema &fieldSchema, 
     node_->addLeaf(fieldSchema.root());
 
     node_->addCustomAttributesForField(customFields);
+
+    node_->addDefaultForField(fieldDefault);
 }
 
 std::string RecordSchema::getDoc() const {
