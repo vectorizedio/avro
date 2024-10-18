@@ -149,10 +149,10 @@ struct Field {
     const string name;
     const vector<string> aliases;
     const NodePtr schema;
-    const GenericDatum defaultValue;
+    const std::optional<GenericDatum> defaultValue;
     const CustomAttributes customAttributes;
 
-    Field(string n, vector<string> a, NodePtr v, GenericDatum dv, const CustomAttributes &ca)
+    Field(string n, vector<string> a, NodePtr v, std::optional<GenericDatum> dv, const CustomAttributes &ca)
         : name(std::move(n)), aliases(std::move(a)), schema(std::move(v)), defaultValue(std::move(dv)), customAttributes(ca) {}
 };
 
@@ -298,7 +298,7 @@ static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
-    GenericDatum d = (it2 == m.end()) ? GenericDatum() : makeGenericDatum(node, it2->second, st);
+    std::optional<GenericDatum> d = (it2 == m.end()) ? std::optional<GenericDatum>{} : makeGenericDatum(node, it2->second, st);
     // Get custom attributes
     CustomAttributes customAttributes;
     getCustomAttributes(m, customAttributes);
@@ -313,7 +313,7 @@ static NodePtr makeRecordNode(const Entity &e, const Name &name,
     vector<vector<string>> fieldAliases;
     concepts::MultiAttribute<NodePtr> fieldValues;
     concepts::MultiAttribute<CustomAttributes> customAttributes;
-    vector<GenericDatum> defaultValues;
+    vector<std::optional<GenericDatum>> defaultValues;
     string fields = "fields";
     for (const auto &it : getArrayField(e, m, fields)) {
         Field f = makeField(it, st, ns);
@@ -383,7 +383,7 @@ static NodePtr makeEnumNode(const Entity &e,
     string symbolsName = "symbols";
     const Array &v = getArrayField(e, m, symbolsName);
     concepts::MultiAttribute<string> symbols;
-    GenericDatum defaultValue;
+    std::optional<GenericDatum> defaultValue;
     for (const auto &it : v) {
         if (it.type() != json::EntityType::String) {
             throw Exception("Enum symbol not a string: {}", it.toString());

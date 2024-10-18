@@ -436,7 +436,7 @@ struct TestSchema {
         concepts::MultiAttribute<std::string> fieldNames;
         std::vector<std::vector<std::string>> fieldAliases;
         concepts::MultiAttribute<NodePtr> fieldValues;
-        std::vector<GenericDatum> defaultValues;
+        std::vector<std::optional<GenericDatum>> defaultValues;
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
         CustomAttributes cf;
@@ -474,7 +474,7 @@ struct TestSchema {
         HasName nameConcept(recordName);
         concepts::MultiAttribute<std::string> fieldNames;
         concepts::MultiAttribute<NodePtr> fieldValues;
-        std::vector<GenericDatum> defaultValues;
+        std::vector<std::optional<GenericDatum>> defaultValues;
 
         fieldNames.add("f1");
         fieldValues.add(NodePtr(new NodePrimitive(Type::AVRO_LONG)));
@@ -559,6 +559,11 @@ struct TestSchema {
       "name": "f4_union_null_default",
       "type": ["null", "string"],
       "default": null
+    },
+    {
+      "name": "f5_null_default",
+      "type": "null",
+      "default": null
     }
   ]
 })";
@@ -566,15 +571,18 @@ struct TestSchema {
         const auto& nodePtr = *schema.root();
 
         BOOST_CHECK_EQUAL(nodePtr.type(), AVRO_RECORD);
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(0).type(), AVRO_NULL);
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(1).type(), AVRO_NULL);
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(2).type(), AVRO_NULL);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(0).has_value(), false);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(1).has_value(), false);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(2).has_value(), false);
 
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(3).type(), AVRO_STRING);
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(3).isUnion(), true);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(3)->type(), AVRO_STRING);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(3)->isUnion(), true);
 
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(4).type(), AVRO_NULL);
-        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(4).isUnion(), true);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(4)->type(), AVRO_NULL);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(4)->isUnion(), true);
+
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(5)->type(), AVRO_NULL);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(5)->isUnion(), false);
 
         testNode(nodePtr, jsonWithDefaults);
     }

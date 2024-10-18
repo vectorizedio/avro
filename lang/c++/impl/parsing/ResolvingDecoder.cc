@@ -211,8 +211,14 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
         if (s->type() == AVRO_SYMBOLIC) {
             s = resolveSymbol(s);
         }
-        shared_ptr<vector<uint8_t>> defaultBinary =
-            getAvroBinary(reader->defaultValueAt(ri));
+
+        auto reader_def = reader->defaultValueAt(ri);
+        if (!reader_def) {
+            // If the reader’s record schema has a field with no default value, and writer’s schema does not have a
+            // field with the same name, an error is signalled.
+            return make_shared<Production>(1, Symbol::error(writer, reader));
+        }
+        shared_ptr<vector<uint8_t>> defaultBinary = getAvroBinary(*reader_def);
         result->push_back(Symbol::defaultStartAction(defaultBinary));
         auto it = m.find(NodePair(s, s));
         ProductionPtr p = it == m.end() ? doGenerate2(s, s, m, m2) : it->second;

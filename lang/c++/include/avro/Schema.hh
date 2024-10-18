@@ -107,7 +107,7 @@ public:
     // Add a field with a field default
     void addField(const std::string &name, const Schema &fieldSchema,
                   const CustomAttributes &customAttributes,
-                  const GenericDatum &fieldDefault);
+                  const std::optional<GenericDatum> &fieldDefault);
 
     std::string getDoc() const;
     void setDoc(const std::string &);

@@ -25,6 +25,7 @@
 #include <cassert>
 #include <memory>
 #include <utility>
+#include <optional>
 
 #include "CustomAttributes.hh"
 #include "Exception.hh"
@@ -144,7 +145,7 @@ public:
     }
     virtual size_t leaves() const = 0;
     virtual const NodePtr &leafAt(size_t index) const = 0;
-    virtual const GenericDatum &defaultValueAt(size_t index) const {
+    virtual const std::optional<GenericDatum> &defaultValueAt(size_t index) const {
         throw Exception("No default value at: {}", index);
     }
 
@@ -167,7 +168,7 @@ public:
         checkLock();
         doAddCustomAttribute(customAttributes);
     }
-    void addDefaultForField(const GenericDatum &fieldDefault) {
+    void addDefaultForField(const std::optional<GenericDatum> &fieldDefault) {
         checkLock();
         doAddDefault(fieldDefault);
     }
@@ -212,7 +213,7 @@ protected:
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(size_t size) = 0;
     virtual void doAddCustomAttribute(const CustomAttributes &customAttributes) = 0;
-    virtual void doAddDefault(const GenericDatum &fieldDefault) = 0;
+    virtual void doAddDefault(const std::optional<GenericDatum> &fieldDefault) = 0;
 
 private:
     const Type type_;
