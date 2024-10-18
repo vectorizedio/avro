@@ -410,8 +410,7 @@ struct TestSchema {
         readData(p);
     }
 
-    void testNodeRecord(const NodeRecord &nodeRecord,
-                        const std::string &expectedJson) {
+    void testNode(const Node &nodeRecord, const std::string &expectedJson) {
         BOOST_CHECK_EQUAL(nodeRecord.isValid(), true);
 
         std::ostringstream oss;
@@ -464,8 +463,8 @@ struct TestSchema {
             "\"numberField\": 1.23, "
             "\"stringField\": \\\"field value with \\\"double quotes\\\"\\\""
             "}]}";
-        testNodeRecord(nodeRecordWithCustomAttribute,
-                       expectedJsonWithCustomAttribute);
+        testNode(nodeRecordWithCustomAttribute,
+                 expectedJsonWithCustomAttribute);
     }
 
     // Create NodeRecord without custom attributes at field level
@@ -485,8 +484,8 @@ struct TestSchema {
         std::string expectedJsonWithoutCustomAttribute =
             "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
             "[{\"name\": \"f1\", \"type\": \"long\"}]}";
-        testNodeRecord(nodeRecordWithoutCustomAttribute,
-                       expectedJsonWithoutCustomAttribute);
+        testNode(nodeRecordWithoutCustomAttribute,
+                 expectedJsonWithoutCustomAttribute);
     }
 
     void checkCustomAttributes_getAttribute() {
@@ -533,6 +532,54 @@ struct TestSchema {
         BOOST_CHECK_THROW(nodePtr->customAttributesAt(1), std::out_of_range);
     }
 
+    void checkDefaultsFromNode()
+    {
+        std::string jsonWithDefaults = R"({
+  "type": "record",
+  "name": "Test",
+  "fields": [
+    {
+      "name": "f0_union_no_string_default",
+      "type": ["string", "null"]
+    },
+    {
+      "name": "f1_union_no_null_default",
+      "type": ["null", "string"]
+    },
+    {
+      "name": "f2_null_no_default",
+      "type": "null"
+    },
+    {
+      "name": "f3_union_string_default",
+      "type": ["string", "null"],
+      "default": "stringval"
+    },
+    {
+      "name": "f4_union_null_default",
+      "type": ["null", "string"],
+      "default": null
+    }
+  ]
+})";
+        auto schema = avro::compileJsonSchemaFromString(jsonWithDefaults);
+        const auto& nodePtr = *schema.root();
+
+        BOOST_CHECK_EQUAL(nodePtr.type(), AVRO_RECORD);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(0).type(), AVRO_NULL);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(1).type(), AVRO_NULL);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(2).type(), AVRO_NULL);
+
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(3).type(), AVRO_STRING);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(3).isUnion(), true);
+
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(4).type(), AVRO_NULL);
+        BOOST_CHECK_EQUAL(nodePtr.defaultValueAt(4).isUnion(), true);
+
+        testNode(nodePtr, jsonWithDefaults);
+    }
+
+
     void test() {
         std::cout << "Before\n";
         schema_.toJson(std::cout);
@@ -560,6 +607,7 @@ struct TestSchema {
         checkCustomAttributes_getAttribute();
         checkCustomAttributesFromNode();
         checkNoCustomAttributesFromNode();
+        checkDefaultsFromNode();
     }
 
     ValidSchema schema_;
