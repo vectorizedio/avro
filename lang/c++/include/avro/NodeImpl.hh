@@ -172,7 +172,7 @@ protected:
     void doAddCustomAttribute(const CustomAttributes &customAttributes) override {
         customAttributes_.add(customAttributes);
     }
-    void doAddDefault(const std::optional<GenericDatum> &) override {
+    void doAddDefault(const GenericDatum &) override {
         throw Exception("Default only permitted for records");
     }
     SchemaResolution furtherResolution(const Node &reader) const {
@@ -306,24 +306,24 @@ protected:
 
 class AVRO_DECL NodeRecord : public NodeImplRecord {
     std::vector<std::vector<std::string>> fieldsAliases_;
-    std::vector<std::optional<GenericDatum>> fieldsDefaultValues_;
+    std::vector<GenericDatum> fieldsDefaultValues_;
 
 public:
     NodeRecord() : NodeImplRecord(AVRO_RECORD) {}
 
     NodeRecord(const HasName &name, const MultiLeaves &fields,
-               const LeafNames &fieldsNames, std::vector<std::optional<GenericDatum>> dv);
+               const LeafNames &fieldsNames, std::vector<GenericDatum> dv);
 
     NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
-               const LeafNames &fieldsNames, std::vector<std::optional<GenericDatum>> dv);
+               const LeafNames &fieldsNames, std::vector<GenericDatum> dv);
 
     NodeRecord(const HasName &name, const MultiLeaves &fields,
                const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
-               std::vector<std::optional<GenericDatum>> dv, const MultiAttributes &customAttributes);
+               std::vector<GenericDatum> dv, const MultiAttributes &customAttributes);
 
     NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
                const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
-               std::vector<std::optional<GenericDatum>> dv, const MultiAttributes &customAttributes);
+               std::vector<GenericDatum> dv, const MultiAttributes &customAttributes);
 
     void swap(NodeRecord &r) {
         NodeImplRecord::swap(r);
@@ -339,10 +339,10 @@ public:
         return ((nameAttribute_.size() == 1) && (leafAttributes_.size() == leafNameAttributes_.size()) && (customAttributes_.size() == 0 || customAttributes_.size() == leafAttributes_.size()));
     }
 
-    const std::optional<GenericDatum> &defaultValueAt(size_t index) const override {
+    const GenericDatum &defaultValueAt(size_t index) const override {
         return fieldsDefaultValues_[index];
     }
-    void doAddDefault(const std::optional<GenericDatum> &fieldDefault) override {
+    void doAddDefault(const GenericDatum &fieldDefault) override {
         fieldsDefaultValues_.push_back(fieldDefault);
     }
 
@@ -351,12 +351,12 @@ public:
 };
 
 class AVRO_DECL NodeEnum : public NodeImplEnum {
-    std::optional<GenericDatum> defaultValue;
+    GenericDatum defaultValue;
 
 public:
     NodeEnum() : NodeImplEnum(AVRO_ENUM) {}
 
-    NodeEnum(const HasName &name, const LeafNames &symbols, std::optional<GenericDatum> dv) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()), defaultValue(std::move(dv)) {
+    NodeEnum(const HasName &name, const LeafNames &symbols, GenericDatum dv) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()), defaultValue(std::move(dv)) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception("Cannot add duplicate enum: {}", leafNameAttributes_.get(i));
@@ -379,7 +379,7 @@ public:
             (nameAttribute_.size() == 1) && (leafNameAttributes_.size() > 0));
     }
 
-    const std::optional<GenericDatum> &defaultValueAt(size_t index) const override {
+    const GenericDatum &defaultValueAt(size_t index) const override {
         if (index != 0) {
             throw Exception("Enum has only 1 default");
         }

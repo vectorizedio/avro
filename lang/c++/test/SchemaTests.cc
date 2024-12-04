@@ -101,8 +101,6 @@ const char *basicSchemas[] = {
     R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : 2 }]})",
     // default double - double
     R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : 1.2 }]})",
-    // default same type as first of union
-    R"({ "name":"test", "type": "record", "fields": [ {"name": "opt_string","type": ["null", "string"],"default": null }]})",
 
     // namespace with '$' in it.
     "{\"type\":\"record\",\"name\":\"Test\",\"namespace\":\"a.b$\",\"fields\":"
@@ -164,9 +162,7 @@ const char *basicSchemaErrors[] = {
     // default double - null
     R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : null }]})",
     // default double - string
-    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : "string" }]})",
-    // default not same type as first of union
-    R"({ "name":"test", "type": "record", "fields": [ {"name": "opt_string","type": ["string", "null"],"default": null }]})",
+    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : "string" }]})"
 
 };
 

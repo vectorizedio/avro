@@ -329,10 +329,13 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
 
         // Serialize "default" field:
         if (!fieldsDefaultValues_.empty()) {
-            if (fieldsDefaultValues_[i]) {
+            if (!fieldsDefaultValues_[i].isUnion() && fieldsDefaultValues_[i].type() == AVRO_NULL) {
+                // No "default" field.
+            } else {
                 os << ",\n"
                    << indent(depth) << "\"default\": ";
-                leafAttributes_.get(i)->printDefaultToJson(*fieldsDefaultValues_[i], os, depth);
+                leafAttributes_.get(i)->printDefaultToJson(fieldsDefaultValues_[i], os,
+                                                           depth);
             }
         }
 
@@ -477,21 +480,21 @@ void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 }
 
 NodeRecord::NodeRecord(const HasName &name, const MultiLeaves &fields,
-                       const LeafNames &fieldsNames, std::vector<std::optional<GenericDatum>> dv)
+                       const LeafNames &fieldsNames, std::vector<GenericDatum> dv)
     : NodeRecord(name, HasDoc(), fields, fieldsNames, {}, std::move(dv), MultiAttributes()) {}
 
 NodeRecord::NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
-                       const LeafNames &fieldsNames, std::vector<std::optional<GenericDatum>> dv)
+                       const LeafNames &fieldsNames, std::vector<GenericDatum> dv)
     : NodeRecord(name, doc, fields, fieldsNames, {}, std::move(dv), MultiAttributes()) {}
 
 NodeRecord::NodeRecord(const HasName &name, const MultiLeaves &fields,
                        const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
-                       std::vector<std::optional<GenericDatum>> dv, const MultiAttributes &customAttributes)
+                       std::vector<GenericDatum> dv, const MultiAttributes &customAttributes)
     : NodeRecord(name, HasDoc(), fields, fieldsNames, std::move(fieldsAliases), std::move(dv), customAttributes) {}
 
 NodeRecord::NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
                        const LeafNames &fieldsNames, std::vector<std::vector<std::string>> fieldsAliases,
-                       std::vector<std::optional<GenericDatum>> dv, const MultiAttributes &customAttributes)
+                       std::vector<GenericDatum> dv, const MultiAttributes &customAttributes)
     : NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, customAttributes, NoSize()),
       fieldsAliases_(std::move(fieldsAliases)),
       fieldsDefaultValues_(std::move(dv)) {
@@ -557,10 +560,10 @@ void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     os << '\n';
     os << indent(--depth) << "]";
 
-    if (defaultValue) {
+    if (defaultValue.type() != AVRO_NULL) {
         os << ",\n"
            << indent(depth) << "\"default\": ";
-        NodePrimitive{defaultValue->type()}.printDefaultToJson(*defaultValue, os, depth);
+        NodePrimitive{defaultValue.type()}.printDefaultToJson(defaultValue, os, depth);
     }
 
     os << "\n";

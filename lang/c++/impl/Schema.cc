@@ -17,7 +17,6 @@
  */
 
 #include <utility>
-#include <optional>
 
 #include "CustomAttributes.hh"
 #include "Schema.hh"
@@ -34,10 +33,12 @@ void RecordSchema::addField(const std::string &name, const Schema &fieldSchema) 
 }
 
 void RecordSchema::addField(const std::string &name, const Schema &fieldSchema, const CustomAttributes &customFields) {
-    addField(name, fieldSchema, customFields, std::nullopt);
+    // NOTE: GenericDatum() is the value used when compiling a schema if there
+    // is no default.
+    addField(name, fieldSchema, customFields, GenericDatum());
 }
 
-void RecordSchema::addField(const std::string &name, const Schema &fieldSchema, const CustomAttributes &customFields, const std::optional<GenericDatum> &fieldDefault) {
+void RecordSchema::addField(const std::string &name, const Schema &fieldSchema, const CustomAttributes &customFields, const GenericDatum &fieldDefault) {
     // add the name first. it will throw if the name is a duplicate, preventing
     // the leaf from being added
     node_->addName(name);
